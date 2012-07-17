@@ -1,50 +1,51 @@
 # New ports collection makefile for:	rrdtool-minimal
-# Date created:				19th December 2011
-# Whom:					Stefan Grundmann
+# Date created:				
+# Whom:					
 #
-# $FreeBSD$
+# based on $FreeBSD: ports/databases/rrdtool/Makefile,v 1.105 2012/06/01 05:16:54 dinoex Exp $
 #
 
-PORTNAME=	rrdtool-minimal
-SVN_REV=	002247
-PORTVERSION=	1.4.6.${SVN_REV}
-CATEGORIES=	databases
-MASTER_SITES=
+PORTNAME=	rrdtool
+PKGNAMESUFFIX=  -minimal
+PORTVERSION=	1.4.7
+PORTREVISION=	2
+CATEGORIES=	databases graphics
+MASTER_SITES=	http://oss.oetiker.ch/rrdtool/pub/
+
+MAINTAINER=	_not_maintained_
+COMMENT=	Round Robin Database Tools
 
 LICENSE=	GPLv2
 
+BUILD_DEPENDS= xml2:${PORTSDIR}/textproc/libxml2 \
+               ${LOCALBASE}/include/glib-2.0/glib.h:${PORTSDIR}/devel/glib20	
+
 CONFLICTS=	rrdtool-1.0* rrdtool-1.2* rrdtool*
 
-MAINTAINER=	not_maintened
-COMMENT=	minimal rrdtool
-
-USE_AUTOTOOLS= libtoolize autoconf libtool automake
+USE_AUTOTOOLS=	libtool
+USE_LDCONFIG=	yes
 GNU_CONFIGURE=	yes
+USE_GMAKE=	yes
 
-BUILD_DEPENDS=	${LOCALBASE}/include/glib-2.0/glib.h:${PORTSDIR}/devel/glib20 \
-		xmlcatalog:${PORTSDIR}/textproc/libxml2
+CONFIGURE_ARGS=	--disable-lua --disable-tcl --disable-python --disable-nls \
+               --disable-perl --disable-libwrap --disable-libdbi \
+               --enable-static-programs --disable-rrdcgi \
+               --disable-rrd_graph
 
-CONFIGURE_ARGS=--disable-lua --disable-tcl --disable-python --disable-nls \
-	       --disable-perl --disable-libwrap --disable-libdbi \
-	       --enable-static-programs --disable-rrdcgi \
-	       --disable-rrd_graph 
+PLIST_FILES=    bin/rrdtool
 
-EXTRACT_DEPENDS+=	svn:${PORTSDIR}/devel/subversion
+post-extract:
+	@${REINPLACE_CMD} -e 's/^POD3/#POD3/' ${WRKSRC}/doc/Makefile.in
+	@${REINPLACE_CMD} -e 's/[[:space:]]install-idocDATA//g' \
+		-e 's/[[:space:]]install-ihtmlDATA//g' \
+		-e 's/^[[:space:]].*cd .* rrdtool.html index.html/      #/' \
+		${WRKSRC}/doc/Makefile.in
+	${REINPLACE_CMD} -e '/^SUBDIRS = /s| examples | |' \
+		${WRKSRC}/Makefile.in
 
-PLIST_FILES=	bin/rrdtool
 
-pre-configure:
-	@cd ${WRKSRC} && ${LIBTOOLIZE} && ${AUTORECONF} --force --install --verbose -I m4
-
-do-fetch:
-	@${DO_NADA}
-
-do-extract:
-	${MKDIR} ${WRKDIR}
-	svn export -r ${SVN_REV} \
-	    svn://svn.oetiker.ch/rrdtool/branches/1.4/program ${WRKSRC}
-
-do-install:
-	${INSTALL_PROGRAM} ${WRKSRC}/src/rrdtool ${PREFIX}/bin
+CPPFLAGS+=	-I${LOCALBASE}/include 
+##LDFLAGS+=	-L${LOCALBASE}/lib
+CFLAGS:=	${CFLAGS:N-ffast-math}
 
 .include <bsd.port.mk>
