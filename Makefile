@@ -32,7 +32,7 @@ CONFIGURE_ARGS=	--disable-lua --disable-tcl --disable-python --disable-nls \
                --enable-static-programs --disable-rrdcgi \
                --disable-rrd_graph
 
-PLIST_FILES=    bin/rrdtool
+PLIST_FILES=    bin/rrdtool bin/rrdcached bin/rrdupdate
 
 post-extract:
 	@${REINPLACE_CMD} -e 's/^POD3/#POD3/' ${WRKSRC}/doc/Makefile.in
